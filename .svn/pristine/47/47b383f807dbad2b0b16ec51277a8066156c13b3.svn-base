@@ -1,0 +1,215 @@
+package ua.nure.dudka.practice2;
+
+import java.util.Arrays;
+import java.util.Iterator;
+
+public class MyListImpl implements MyList, ListIterable {
+    private static final int INIT_SIZE = 0;
+    private int elementsNumber;
+    private Object[] list;
+
+    MyListImpl() {
+        this.list = new Object[INIT_SIZE];
+    }
+
+    @Override
+    public void add(Object e) {
+        if (elementsNumber == size()) {
+            expandList();
+        }
+
+        list[elementsNumber++] = e;
+    }
+
+    @Override
+    public void clear() {
+        elementsNumber = 0;
+        Object[] temp = new Object[elementsNumber];
+        list = Arrays.copyOf(temp, elementsNumber);
+    }
+
+    @Override
+    public boolean remove(Object o) {
+        if (o != null) {
+            for (int i = 0; i < list.length; i++) {
+                if (o.equals(list[i])) {
+                    copyArray(i);
+                    return true;
+                }
+            }
+        } else {
+            for (int i = 0; i < list.length; i++) {
+                if (o == list[i]) {
+                    copyArray(i);
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private void copyArray(int i) {
+        Object[] temp = new Object[elementsNumber - 1];
+        System.arraycopy(list, 0, temp, 0, i);
+        System.arraycopy(list, i + 1, temp, i, elementsNumber - i - 1);
+        elementsNumber--;
+        list = temp;
+    }
+
+    @Override
+    public Object[] toArray() {
+        return list;
+    }
+
+    @Override
+    public int size() {
+        return list.length;
+    }
+
+    @Override
+    public boolean contains(Object o) {
+        if (o != null) {
+            for (Object element : list) {
+                if (o.equals(element)) {
+                    return true;
+                }
+            }
+        } else {
+            for (Object element : list) {
+                if (element == o) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean containsAll(MyList e) {
+        int containedElements = 0;
+        Object[] temp = e.toArray();
+
+        for (int i = 0; i < elementsNumber; i++) {
+            for (int j = 0; j < e.size(); j++) {
+                if (temp[j] != null & temp[j].equals(list[i])) {
+                    containedElements++;
+                } else if (temp[j] == list[i]) {
+                    containedElements++;
+                }
+            }
+        }
+
+        return containedElements == temp.length;
+    }
+
+    private void expandList() {
+        int increaseSize = 1;
+        list = Arrays.copyOf(list, list.length + increaseSize);
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        int index = 0;
+
+        builder.append("[");
+
+        for (Object element : list) {
+            if (element == null) {
+                builder.append("null");
+                index++;
+            } else {
+                builder.append(element.toString());
+                index++;
+            }
+
+            if (index != list.length) {
+                builder.append(", ");
+            }
+        }
+
+        builder.append("]");
+
+        return String.valueOf(builder);
+    }
+
+    @Override
+    public Iterator<Object> iterator() {
+        return new IteratorImpl();
+    }
+
+    @Override
+    public ListIterator listIterator() {
+        return new ListIteratorImpl();
+    }
+
+    private class IteratorImpl implements Iterator<Object> {
+        boolean wasCalled;
+        int index;
+
+
+        @Override
+        public boolean hasNext() {
+            return index < list.length;
+        }
+
+        @Override
+        public Object next() {
+            wasCalled = true;
+            return list[index++];
+        }
+
+        @Override
+        public void remove() {
+            if (!wasCalled) {
+                throw new IllegalStateException();
+            }
+
+            if (list[index - 1] != null) {
+                for (int i = 0; i < list.length; i++) {
+                    if (list[index - 1].equals(list[i])) {
+                        copyArray(i);
+                    }
+                }
+            } else {
+                for (int i = 0; i < list.length; i++) {
+                    if (list[index - 1] == list[i]) {
+                        copyArray(i);
+                    }
+                }
+            }
+
+            index--;
+            wasCalled = false;
+        }
+    }
+
+    private class ListIteratorImpl extends IteratorImpl implements ListIterator {
+        @Override
+        public boolean hasPrevious() {
+            return index > 0;
+        }
+
+        @Override
+        public Object previous() {
+            wasCalled = true;
+            if (!hasPrevious()) {
+                return list[0];
+            } else {
+                return list[--index];
+            }
+        }
+
+        @Override
+        public void set(Object e) {
+            if (!wasCalled) {
+                throw new IllegalStateException();
+            }
+
+            list[index] = e;
+            wasCalled = false;
+        }
+    }
+}
